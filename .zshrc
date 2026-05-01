@@ -7,8 +7,8 @@ alias gitacsrc="git add src && git commit -m"
 alias intl="brew install"
 alias gd="git diff"
 alias gch="git checkout"
-alias bringoutthelobster="npm i && npm run compile && cd ../ideaas-frontend && yarn install && cd ../hackerrank-vscode-copilot-chat && npm i && npm run compile && ./start-dev.js"
-alias moneyshot="cloneout && cd hackerrank-vscode && bringoutthelobster"
+alias bringoutthelobster="npm i && npm run compile && cd ../ideaas-frontend && yarn install && cd ../<REDACTED>  && npm i && npm run compile && ./start-dev.js"
+alias moneyshot="cloneout && cd <REDACTED> && bringoutthelobster"
 alias testthing="[ ! -d node_modules ] && npm i; npm run compile && npm run test:coverage"
 alias deployer="npm i && node scripts/release.js vscode --variant pkg --env"
 alias lj="lazygit"
@@ -44,10 +44,6 @@ cloneout() {
   local dest="${PWD}"
 
   local -a repos=(
-    hackerrank-vscode
-    hackerrank-vscode-copilot-chat
-    ideaas-frontend
-    vscode-extensions
   )
 
   # Basic sanity (cheap + avoids confusing failures later)
