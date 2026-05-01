@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+
+# AeroSpace + SketchyBar
+# Compact floating bar, cohesive theme, and event-driven workspace updates.
+
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+. "$CONFIG_DIR/theme.sh"
+
+##### Bar Appearance #####
+# Configuring the general appearance of the bar.
+# These are only some of the options available. For all options see:
+# https://felixkratz.github.io/SketchyBar/config/bar
+# If you are looking for other colors, see the color picker:
+# https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
+
+sketchybar --bar position=top                                    \
+                 height="$SB_BAR_HEIGHT"                          \
+                 margin="$SB_BAR_MARGIN"                          \
+                 y_offset=0                                       \
+                 corner_radius="$SB_BAR_RADIUS"                   \
+                 blur_radius=30                                   \
+                 color="$SB_COLOR_BG"                             \
+	                 border_width=1                                   \
+	                 border_color="$SB_COLOR_BORDER"                  \
+	                 padding_left=6                                   \
+	                 padding_right=6                                  \
+	                 topmost=window                                   \
+	                 sticky=on                                        \
+	                 shadow=on                                        \
+	                 font_smoothing=on
+
+##### Changing Defaults #####
+# We now change some default values, which are applied to all further items.
+# For a full list of all available item properties see:
+# https://felixkratz.github.io/SketchyBar/config/items
+
+default=(
+  padding_left=4
+  padding_right=4
+  icon.font="$SB_ICON_FONT_FAMILY:$SB_ICON_FONT_STYLE:$SB_ICON_FONT_SIZE"
+  label.font="$SB_FONT_FAMILY:$SB_FONT_STYLE:$SB_FONT_SIZE"
+  icon.color="$SB_COLOR_TEXT"
+  label.color="$SB_COLOR_TEXT"
+  icon.padding_left=4
+  icon.padding_right=4
+  label.padding_left=4
+  label.padding_right=4
+  background.drawing=off
+  updates=on
+)
+sketchybar --default "${default[@]}"
+
+##### Adding aeropsace layouts #####
+# Add the aerospace events we specified in aerospace.toml
+sketchybar --add event aerospace_workspace_change
+sketchybar --add event aerospace_focus_change
+
+# Bootstrap spaces without depending on AeroSpace being up at SketchyBar start.
+# We keep a generous pool so multi-digit workspaces don't explode the integration.
+SPACE_IDS=({0..30} {A..Z})
+
+for sid in "${SPACE_IDS[@]}"; do
+  sketchybar --add item space.$sid left \
+    --set space.$sid \
+	    drawing=off \
+	    icon.font="$SB_FONT_FAMILY:$SB_FONT_STYLE:$SB_FONT_SIZE" \
+	    icon.color="$SB_COLOR_TEXT" \
+	    label.color="$SB_COLOR_SUBTEXT" \
+	    background.color="$SB_COLOR_SURFACE" \
+	    background.corner_radius="$SB_ITEM_RADIUS" \
+	    background.drawing=on \
+	    background.border_color="$SB_COLOR_BORDER" \
+	    background.border_width=1 \
+	    background.height="$SB_ITEM_HEIGHT" \
+	    icon="$sid" \
+	    icon.padding_left=8 \
+	    icon.padding_right=6 \
+	    icon.shadow.drawing=off \
+	    label.font="$SB_APP_ICON_FONT:Regular:$SB_APP_ICON_FONT_SIZE" \
+	    label.padding_right=10 \
+		    label.padding_left=0 \
+		    label.y_offset=0 \
+		    click_script="aerospace workspace $sid"
+done
+
+sketchybar --add item aerospace_events left \
+  --set aerospace_events drawing=off update_freq=5 script="$PLUGIN_DIR/space_windows.sh" \
+  --subscribe aerospace_events aerospace_workspace_change aerospace_focus_change system_woke
+
+# Tiny, minimal focus pulse for window switches
+sketchybar --add item aerospace_focus left \
+  --set aerospace_focus drawing=off script="$PLUGIN_DIR/focus_pulse.sh" \
+  --subscribe aerospace_focus aerospace_focus_change
+
+# Front app!!
+sketchybar --add item front_app left \
+  --set front_app \
+  display=active \
+  background.color="$SB_COLOR_SURFACE" \
+  background.corner_radius="$SB_ITEM_RADIUS" \
+  background.height="$SB_ITEM_HEIGHT" \
+  background.border_width=1 \
+  background.border_color="$SB_COLOR_BORDER" \
+  background.drawing=on \
+  icon.font="$SB_APP_ICON_FONT:Regular:$SB_APP_ICON_FONT_SIZE" \
+  icon.color="$SB_COLOR_TEXT" \
+  icon.padding_left=10 \
+  icon.padding_right=8 \
+  label.color="$SB_COLOR_SUBTEXT" \
+  label.max_chars=28 \
+  label.padding_right=12 \
+  click_script="open -a 'Mission Control'" \
+  script="$PLUGIN_DIR/front_app.sh" \
+  --subscribe front_app front_app_switched
+
+##### Adding Right Items #####
+# In the same way as the left items we can add items to the right side.
+# Additional position (e.g. center) are available, see:
+# https://felixkratz.github.io/SketchyBar/config/items#adding-items-to-sketchybar
+
+# Some items refresh on a fixed cycle, e.g. the clock runs its script once
+# every 10s. Other gititems respond to events they subscribe to, e.g. the
+# volume.sh script is only executed once an actual change in system audio
+# volume is registered. More info about the event system can be found here:
+# https://felixkratz.github.io/SketchyBar/config/events
+
+sketchybar --add item wifi right \
+  --set wifi \
+  update_freq=30 \
+  icon.font="$SB_STATUS_ICON_FONT" \
+  label.max_chars=14 \
+  label.color="$SB_COLOR_TEXT" \
+  script="$PLUGIN_DIR/wifi.sh" \
+  --subscribe wifi wifi_change system_woke \
+  --add item volume right \
+  --set volume \
+  icon.font="$SB_STATUS_ICON_FONT" \
+  label.color="$SB_COLOR_TEXT" \
+  script="$PLUGIN_DIR/volume.sh" \
+  --subscribe volume volume_change system_woke \
+  --add item battery right \
+  --set battery \
+  icon.font="$SB_STATUS_ICON_FONT" \
+  label.color="$SB_COLOR_TEXT" \
+  update_freq=120 \
+  script="$PLUGIN_DIR/battery.sh" \
+  --subscribe battery system_woke power_source_change
+
+# Controls pill (Wi‑Fi · Volume · Battery)
+sketchybar --add bracket controls wifi volume battery \
+  --set controls \
+  background.color="$SB_COLOR_SURFACE" \
+  background.corner_radius="$SB_ITEM_RADIUS" \
+  background.height="$SB_ITEM_HEIGHT" \
+  background.border_width=1 \
+  background.border_color="$SB_COLOR_BORDER" \
+  background.drawing=on
+
+sketchybar --add item date right \
+  --set date update_freq=60 script="$PLUGIN_DIR/date.sh" \
+  icon="$SB_ICON_DATE" \
+  icon.font="$SB_STATUS_ICON_FONT" \
+  icon.color="$SB_COLOR_SUBTEXT" \
+  label.color="$SB_COLOR_TEXT" \
+  --subscribe date system_woke \
+  --add item clock right \
+  --set clock update_freq=10 script="$PLUGIN_DIR/clock.sh" \
+  icon="$SB_ICON_CLOCK" \
+  icon.font="$SB_STATUS_ICON_FONT" \
+  icon.color="$SB_COLOR_SUBTEXT" \
+  label.color="$SB_COLOR_TEXT"
+
+# Date/Time pill
+sketchybar --add bracket datetime date clock \
+  --set datetime \
+  background.color="$SB_COLOR_SURFACE" \
+  background.corner_radius="$SB_ITEM_RADIUS" \
+  background.height="$SB_ITEM_HEIGHT" \
+  background.border_width=1 \
+  background.border_color="$SB_COLOR_BORDER" \
+  background.drawing=on
+
+##### Force all scripts to run the first time (never do this in a script) #####
+sketchybar --update

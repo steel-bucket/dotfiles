@@ -1,0 +1,21 @@
+{
+  "title": "F9 to Play/Pause",
+  "rules": [
+    {
+      "description": "Map F9 to Play/Pause",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "f9"
+          },
+          "to": [
+            {
+              "consumer_key_code": "play_or_pause"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

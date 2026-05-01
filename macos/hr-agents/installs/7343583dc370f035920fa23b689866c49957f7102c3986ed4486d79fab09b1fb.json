@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "scope": "global",
+  "targetRepoPath": "/Users/deepnarayan/hragents/hr-agents",
+  "selectedAgents": [
+    "frontend-developer"
+  ],
+  "installedTools": [
+    "codex"
+  ],
+  "catalogVersion": null,
+  "installedAt": "2026-03-22T10:13:59.104Z"
+}
